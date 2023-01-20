@@ -1,0 +1,50 @@
+# @Author: Dimitri Kirchner @tibapbedoum
+# @Summary: Connect to your Azure account to list all available App Services. Loop through these and check if these are really accessible.
+# Output: Domains are outputed in a CSV format so that you can easily copy/paste and import in Excel.
+# Requirements: Az Powershell module: https://learn.microsoft.com/en-us/powershell/azure/new-azureps-module-az?view=azps-9.3.0
+
+$query = @"
+resources
+| where type == 'microsoft.web/sites'
+| where kind !contains 'functionapp'
+| where properties.state == 'Running'
+| where properties.PublicNetworkAccess != 'Disabled'
+| join kind=leftouter (
+    appserviceresources
+) on name
+| where properties1.SiteAuthEnabled != 'true'
+| project id, name, kind, location, resourceGroup, subscriptionId, properties, tags, identity, zones
+"@
+
+Connect-AzAccount
+$res = Search-AzGraph -UseTenantScope -Query "$query" -First 1000
+Write-Output "Found $($res.Count) available App Services."
+
+$count403 = 0
+$countAuth = 0
+$countSuccess = 0
+
+Write-Output "Domain,HTTP status code,Content length"
+foreach ($appservice in $res) {
+	$domain = "https://$($appservice.name).azurewebsites.net"
+	
+    try {
+        $response = Invoke-WebRequest $($domain) 
+    } catch {
+        $response = $_.Exception.Response
+        if (($response.StatusCode.value__) = 403){
+            $countFailed++
+			Write-Output "$domain,403,na"
+            continue
+        }
+    }
+    if ($response.Headers.Link -like "*aadcdn.msauth.net*") {
+        $countAuth++
+        Write-Output "$domain,required-auth,na"
+        continue
+    }
+    Write-Output "$domain,$($response.StatusCode),$($response.RawContentLength)"
+    $countSuccess++
+}
+
+Write-Output "Found $countSuccess accessible websites, $countFailed restricted websites, and $countAuth websites which require authentication."
