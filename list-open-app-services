@@ -18,7 +18,7 @@ resources
 
 Connect-AzAccount
 $res = Search-AzGraph -UseTenantScope -Query "$query" -First 1000
-Write-Output "Found $($res.Count) available App Services."
+Write-Output "Found $($res.Count) supposedly available App Services."
 
 $count403 = 0
 $countAuth = 0
@@ -34,7 +34,7 @@ foreach ($appservice in $res) {
         $response = $_.Exception.Response
         if (($response.StatusCode.value__) = 403){
             $countFailed++
-			Write-Output "$domain,403,na"
+            Write-Output "$domain,403,na"
             continue
         }
     }
