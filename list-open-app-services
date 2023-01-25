@@ -8,7 +8,7 @@ resources
 | where type == 'microsoft.web/sites'
 | where kind !contains 'functionapp'
 | where properties.state == 'Running'
-| where properties.PublicNetworkAccess != 'Disabled'
+| where properties.publicNetworkAccess != 'Disabled'
 | join kind=leftouter (
     appserviceresources
 ) on name
