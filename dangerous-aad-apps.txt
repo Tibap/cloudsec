@@ -1,0 +1,3 @@
+# Find dangerous Azure AD apps that are configured to support muti-tenants 
+# az login --tenant $tenantId
+az ad app list --query "[?signInAudience!='AzureADMyOrg'].{appId:appId, name:displayName, signInAudience:signInAudience, signInUrl:signInUrl, identifierUris:identifierUris, replyUrlsWithType:replyUrlsWithType, homePageUrl:web.homePageUrl, redirectUris:web.redirectUris}"
