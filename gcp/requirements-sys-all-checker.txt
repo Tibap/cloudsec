@@ -1,0 +1,5 @@
+google-auth
+google-api-python-client
+google-cloud-container
+kubernetes
+google-cloud-resource-manager==0.30.5
